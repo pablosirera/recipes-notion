@@ -1,8 +1,18 @@
 <template>
   <section class="recipe-list">
     <div v-for="recipe in recipes" :key="recipe.id" class="recipe-item">
-      <img v-if="recipe.img" src="recipe.img" alt="recipe.name" />
-      <img v-else src="@/assets/img/pancakes.jpg" alt="recipe.name" />
+      <img
+        v-if="recipe.image"
+        :src="recipe.image"
+        :alt="recipe.name"
+        @click="onClickImage(recipe.id)"
+      />
+      <img
+        v-else
+        src="@/assets/img/pancakes.jpg"
+        :alt="recipe.name"
+        @click="onClickImage(recipe.id)"
+      />
       <h4>{{ recipe.name }}</h4>
       <span :class="recipe.type.color">
         {{ recipe.type.name }}
@@ -20,6 +30,16 @@ export default {
       default: () => [],
     },
   },
+  emits: ['on-click-recipe'],
+  setup(props, { emit }) {
+    const onClickImage = id => {
+      emit('on-click-recipe', id)
+    }
+
+    return {
+      onClickImage,
+    }
+  },
 }
 </script>
 
@@ -34,6 +54,7 @@ export default {
     width: 151px;
     height: 151px;
     border-radius: 16px;
+    cursor: pointer;
   }
   h4 {
     color: var(--main-text);

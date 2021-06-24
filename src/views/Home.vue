@@ -1,79 +1,49 @@
 <template>
   <div class="home">
-    <RecipesList :recipes="recipes" />
+    <RecipesList :recipes="recipes" @on-click-recipe="goToRecipeDetail" />
   </div>
 </template>
 
 <script>
-import axios from 'axios'
 import RecipesList from '@/components/RecipesList.vue'
+import RecipesAPI from '@/api/RecipesAPI'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'Home',
   components: {
     RecipesList,
   },
-  data() {
-    return {
-      recipes: [],
-    }
-  },
-  created() {
-    this.loadData()
-  },
-  methods: {
-    async loadData() {
-      try {
-        const databaseId = '6aaa66871aa24090a7bb3dedebb9be5d'
-        const response = await axios({
-          method: 'post',
-          url: `https://api.notion.com/v1/databases/${databaseId}/query`,
-          headers: {
-            Authorization: `Bearer ${process.env.VUE_APP_NOTION_SECRET}`,
-            'Content-Type': 'application/json',
-            'Notion-Version': '2021-05-13',
-          },
-          data: {
-            filter: {
-              property: 'Nombre',
-              text: {
-                is_not_empty: true,
-              },
-            },
-          },
-        })
+  setup() {
+    const recipes = ref([])
+    const router = useRouter()
 
-        this.recipes = this.parseRecipes(response.data.results)
-        console.log(this.recipes)
+    const loadData = async () => {
+      try {
+        recipes.value = await new RecipesAPI().listRecipes()
+        console.log(recipes.value)
       } catch (error) {
         console.error(error)
       }
-    },
-    async loadBodyRecipes(pageId) {
-      const response = await axios({
-        method: 'get',
-        url: `https://api.notion.com/v1/blocks/${pageId}/children`,
-        headers: {
-          Authorization: `Bearer ${process.env.VUE_APP_NOTION_SECRET}`,
-          'Content-Type': 'application/json',
-          'Notion-Version': '2021-05-13',
-        },
-      })
+    }
 
-      console.log(response)
-    },
-    parseRecipes(recipes) {
-      return recipes.map(recipe => {
-        return {
-          id: recipe.id,
-          name: recipe.properties.Nombre.title[0].plain_text,
-          type: {
-            color: recipe.properties.Tipo.select.color,
-            name: recipe.properties.Tipo.select.name,
-          },
-        }
-      })
-    },
+    const goToRecipeDetail = id => {
+      router.push(`/recipe/${id}`)
+    }
+
+    loadData()
+
+    return {
+      recipes,
+      goToRecipeDetail,
+    }
   },
 }
 </script>
+
+<style lang="scss" scoped>
+.home {
+  padding: 24px;
+}
+</style>
