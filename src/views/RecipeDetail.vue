@@ -3,8 +3,10 @@
     <div class="image-wrapper">
       <img class="recipe-detail-image" :src="recipe.image" :alt="recipe.name" />
     </div>
-    <div class="recipe-body">
+    <div class="recipe-body-wrapper">
       <h1>{{ recipe.name }}</h1>
+      <hr class="divider" />
+      <RecipeBody :recipe="recipeBody" />
     </div>
   </div>
 </template>
@@ -14,11 +16,16 @@ import axios from 'axios'
 import { useRoute } from 'vue-router'
 import { ref } from 'vue'
 import RecipesAPI from '@/api/RecipesAPI'
+import RecipeBody from '@/components/RecipeBody.vue'
 
 export default {
+  components: {
+    RecipeBody,
+  },
   setup() {
     const route = useRoute()
     const recipe = ref({})
+    const recipeBody = ref([])
 
     const loadRecipes = async () => {
       try {
@@ -41,6 +48,26 @@ export default {
         },
       })
       console.log(response)
+
+      recipeBody.value = assembleRecipeBody(response.data.results)
+      console.log(recipeBody.value)
+    }
+
+    const assembleRecipeBody = recipeBlocks => {
+      return recipeBlocks
+        .map(block => {
+          const type = block.type
+
+          if (block[type].text.length) {
+            const text = block[type].text[0].text.content
+
+            return {
+              type,
+              text,
+            }
+          }
+        })
+        .filter(Boolean)
     }
 
     const loadData = async () => {
@@ -52,6 +79,7 @@ export default {
 
     return {
       recipe,
+      recipeBody,
     }
   },
 }
@@ -69,10 +97,20 @@ export default {
     height: 375px;
   }
 
-  .recipe-body {
+  .recipe-body-wrapper {
     height: 100%;
     background-color: white;
     padding: 44px 24px;
+
+    h1 {
+      color: #3e5481;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .divider {
+      background-color: #d0dbea;
+    }
   }
 }
 </style>
